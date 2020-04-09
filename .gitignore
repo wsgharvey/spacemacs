@@ -90,3 +90,9 @@ tags
 .tags
 !tags/
 gtags.files
+
+
+# manually unignore packages
+
+# org-roam
+!private/org-roam/
