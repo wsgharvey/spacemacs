@@ -31,6 +31,12 @@
 - - -
 
 
+** set up Will's packages **
+
+symlink .spacemacs file: `ln -s .spacemacs ~/.spacemacs`
+
+set `ORGNOTESPATH` environment variable in `~/.bashrc`. May need to delete `~/.spacemacs.env`.
+
 **Quick Install:**
 
 This assumes you don't have an existing Emacs setup and want to run Spacemacs as
