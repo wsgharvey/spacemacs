@@ -1,6 +1,6 @@
 ;;; core-keybindings.el --- Spacemacs Core File
 ;;
-;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
+;; Copyright (c) 2012-2020 Sylvain Benner & Contributors
 ;;
 ;; Author: Sylvain Benner <sylvain.benner@gmail.com>
 ;; URL: https://github.com/syl20bnr/spacemacs
@@ -73,15 +73,22 @@ used as the prefix command."
           (concat dotspacemacs-major-mode-emacs-leader-key
                   " " (substring prefix 1))))
     (unless long-name (setq long-name name))
-    (let ((prefix-name (cons name long-name)))
-      (which-key-add-major-mode-key-based-replacements mode
-        full-prefix-emacs prefix-name
-        full-prefix prefix-name)
-      (when (and is-major-mode-prefix dotspacemacs-major-mode-leader-key)
-        (which-key-add-major-mode-key-based-replacements mode major-mode-prefix prefix-name))
-      (when (and is-major-mode-prefix dotspacemacs-major-mode-emacs-leader-key)
-        (which-key-add-major-mode-key-based-replacements
-          mode major-mode-prefix-emacs prefix-name)))))
+    (let ((prefix-name (cons name long-name))
+          (is-minor-mode-prefix (not is-major-mode-prefix))
+          (smap (intern (format "spacemacs-%s-map" mode))))
+      (if (spacemacs//init-leader-mode-map mode smap is-minor-mode-prefix)
+          (which-key-add-keymap-based-replacements (symbol-value smap)
+            (if is-major-mode-prefix (substring prefix 1) prefix) `(,name))
+        (which-key-add-major-mode-key-based-replacements mode
+          full-prefix-emacs prefix-name
+          full-prefix prefix-name)
+        (when is-major-mode-prefix
+          (when dotspacemacs-major-mode-leader-key
+            (which-key-add-major-mode-key-based-replacements
+              mode major-mode-prefix prefix-name))
+          (when dotspacemacs-major-mode-emacs-leader-key
+            (which-key-add-major-mode-key-based-replacements
+              mode major-mode-prefix-emacs prefix-name)))))))
 (put 'spacemacs/declare-prefix-for-mode 'lisp-indent-function 'defun)
 
 (defun spacemacs/set-leader-keys (key def &rest bindings)
@@ -166,12 +173,28 @@ they are in `spacemacs/set-leader-keys'."
 `dotspacemacs-major-mode-emacs-leader-key' for the minor-mode
 MODE. MODE should be a quoted symbol corresponding to a valid
 minor mode. The rest of the arguments are treated exactly like
-they are in `spacemacs/set-leader-keys'."
+they are in `spacemacs/set-leader-keys'. If DEF is string, then
+it is treated as a prefix not a command."
   (let* ((map (intern (format "spacemacs-%s-map" mode))))
     (when (spacemacs//init-leader-mode-map mode map t)
-      (while key
-        (define-key (symbol-value map) (kbd key) def)
-        (setq key (pop bindings) def (pop bindings))))))
+      (let ((map-value (symbol-value map)))
+        (while key
+          (if (stringp def)
+              (which-key-add-keymap-based-replacements map-value key def)
+            (define-key map-value (kbd key) def))
+          (setq key (pop bindings) def (pop bindings)))))))
 (put 'spacemacs/set-leader-keys-for-minor-mode 'lisp-indent-function 'defun)
+
+(defun spacemacs/declare-prefix-for-minor-mode (mode prefix name)
+  "Declare a prefix PREFIX. MODE is the mode in which this prefix command should
+be added. PREFIX is a string describing a key sequence. NAME is a symbol name
+used as the prefix command.
+
+Example:
+  \(spacemacs/declare-prefix-for-minor-mode 'tide-mode \"E\" \"errors\"\)"
+
+  (let* ((map (intern (format "spacemacs-%s-map" mode))))
+    (when (spacemacs//init-leader-mode-map mode map t)
+      (which-key-add-keymap-based-replacements (symbol-value map) prefix name))))
 
 (provide 'core-keybindings)

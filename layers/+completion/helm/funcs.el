@@ -1,6 +1,6 @@
 ;;; funcs.el --- Helm Layer functions File for Spacemacs
 ;;
-;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
+;; Copyright (c) 2012-2020 Sylvain Benner & Contributors
 ;;
 ;; Author: Sylvain Benner <sylvain.benner@gmail.com>
 ;; URL: https://github.com/syl20bnr/spacemacs
@@ -297,7 +297,8 @@ If DEFAULT-INPUTP is non nil then the current region or symbol at point
   ;; --line-number forces line numbers (disabled by default on windows)
   ;; no --vimgrep because it adds column numbers that wgrep can't handle
   ;; see https://github.com/syl20bnr/spacemacs/pull/8065
-  (let ((helm-ag-base-command "rg --smart-case --no-heading --color=never --line-number --max-columns=150"))
+  (let ((helm-ag-base-command "rg --smart-case --no-heading --color=never --line-number --max-columns=150")
+        (helm-ag-success-exit-status '(0 2)))
     (helm-do-ag-buffers)))
 
 (defun spacemacs/helm-buffers-do-rg-region-or-symbol ()
@@ -577,7 +578,7 @@ to buffers)."
              (when (>= num-buffers-placed num-windows) (cl-return))
              (set-window-buffer (winum-get-window-by-number cur-win) buffer)
              (setq cur-win (+ 1 (mod cur-win num-windows)))
-             (incf num-buffers-placed))))
+             (cl-incf num-buffers-placed))))
 
 (defun spacemacs/helm-find-buffers-windows ()
   (interactive)
@@ -644,4 +645,4 @@ to buffers)."
   (interactive)
   (let ((completion-styles completion-styles))
     (add-to-list 'completion-styles `,(if (version< emacs-version "27") 'helm-flex 'flex) t)
-    (command-execute 'helm-M-x)))
+    (call-interactively 'helm-M-x)))

@@ -1,6 +1,6 @@
 ;;; packages.el --- Racket Layer packages File for Spacemacs
 ;;
-;; Copyright (c) 2012-2018 Sylvain Benner & Contributors
+;; Copyright (c) 2012-2020 Sylvain Benner & Contributors
 ;;
 ;; Author: Sylvain Benner <sylvain.benner@gmail.com>
 ;; URL: https://github.com/syl20bnr/spacemacs
@@ -75,7 +75,12 @@
 `insert state'."
         (interactive)
         (racket-run-and-switch-to-repl)
-        (evil-insert-state))
+        (when (buffer-live-p (get-buffer racket-repl-buffer-name))
+          ;; We don't need to worry about the first time the REPL is opened,
+          ;; since the first time, insert state is automatically entered (since
+          ;; it's registered as a REPL?).
+          (with-current-buffer racket-repl-buffer-name
+            (evil-insert-state))))
 
       (defun spacemacs/racket-send-last-sexp-focus ()
         "Call `racket-send-last-sexp' and switch to REPL buffer in
